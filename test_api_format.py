@@ -1,7 +1,7 @@
 import sqlite3
 import json
 import sys
-from main import search_chinese, search_pinyin, search_english
+from src.search.search import search_chinese, search_pinyin, search_english
 
 def test_search_function(search_func, query, description):
     """Test a search function with a sample query."""

@@ -2,9 +2,10 @@ import sys
 import json
 from typing import Dict, Any
 
-# Import the lookup function directly from main.py
+# Import functions directly from source modules
 sys.path.append('.')
-from main import lookup, detect_input_type
+from src.api.endpoints import lookup
+from src.detection.input_detection import detect_input_type
 
 def test_search(text: str, description: str):
     """Test the lookup function with the given text and print the results."""
