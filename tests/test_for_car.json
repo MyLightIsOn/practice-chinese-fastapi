@@ -1,0 +1,584 @@
+{
+    "input_type": "english",
+    "results": [
+        {
+            "id": 1799,
+            "simplified": "上车",
+            "traditional": "上車",
+            "pinyin": "shang4 che1",
+            "definition": "to get on or into (a bus, train, car etc)",
+            "hsk_level": {
+                "combined": 1,
+                "old": null,
+                "new": 1
+            },
+            "frequency_rank": 5091,
+            "radical": "一",
+            "match_type": "fts_exact",
+            "relevance_score": 1,
+            "parts_of_speech": [
+                "v"
+            ],
+            "classifiers": [],
+            "transcriptions": {
+                "pinyin": "shàng chē",
+                "numeric": "shang4 che1",
+                "wadegiles": "shang⁴ ch'e¹",
+                "bopomofo": "ㄕㄤˋ ㄔㄜ",
+                "romatzyh": "shanq che"
+            },
+            "meanings": [
+                "to get on or into (a bus, train, car etc)"
+            ]
+        },
+        {
+            "id": 2015,
+            "simplified": "下车",
+            "traditional": "下車",
+            "pinyin": "xia4 che1",
+            "definition": "to get off or out of (a bus, train, car etc)",
+            "hsk_level": {
+                "combined": 1,
+                "old": null,
+                "new": 1
+            },
+            "frequency_rank": 6014,
+            "radical": "一",
+            "match_type": "fts_exact",
+            "relevance_score": 1,
+            "parts_of_speech": [
+                "v",
+                "vn"
+            ],
+            "classifiers": [],
+            "transcriptions": {
+                "pinyin": "xià chē",
+                "numeric": "xia4 che1",
+                "wadegiles": "hsia⁴ ch'e¹",
+                "bopomofo": "ㄒㄧㄚˋ ㄔㄜ",
+                "romatzyh": "shiah che"
+            },
+            "meanings": [
+                "to get off or out of (a bus, train, car etc)"
+            ]
+        },
+        {
+            "id": 9214,
+            "simplified": "停车场",
+            "traditional": "停車場",
+            "pinyin": "ting2 che1 chang3",
+            "definition": "parking lot; car park",
+            "hsk_level": {
+                "combined": 2,
+                "old": null,
+                "new": 2
+            },
+            "frequency_rank": 5453,
+            "radical": "亻",
+            "match_type": "fts_exact",
+            "relevance_score": 1,
+            "parts_of_speech": [
+                "n"
+            ],
+            "classifiers": [],
+            "transcriptions": {
+                "pinyin": "tíng chē chǎng",
+                "numeric": "ting2 che1 chang3",
+                "wadegiles": "t'ing² ch'e¹ ch'ang³",
+                "bopomofo": "ㄊㄧㄥˊ ㄔㄜ ㄔㄤˇ",
+                "romatzyh": "tyng che chaang"
+            },
+            "meanings": [
+                "parking lot",
+                "car park"
+            ]
+        },
+        {
+            "id": 115147,
+            "simplified": "电动车",
+            "traditional": "電動車",
+            "pinyin": "dian4 dong4 che1",
+            "definition": "electric vehicle (scooter, bicycle, car etc)",
+            "hsk_level": {
+                "combined": 4,
+                "old": null,
+                "new": 4
+            },
+            "frequency_rank": 26291,
+            "radical": "曰",
+            "match_type": "fts_exact",
+            "relevance_score": 1,
+            "parts_of_speech": [
+                "n"
+            ],
+            "classifiers": [],
+            "transcriptions": {
+                "pinyin": "diàndòngchē",
+                "numeric": "diàndòngchē",
+                "wadegiles": "diàndòngchē",
+                "bopomofo": "diàndòngchē",
+                "romatzyh": "diàndòngchē"
+            },
+            "meanings": [
+                "Electric vehicle"
+            ]
+        },
+        {
+            "id": 4149,
+            "simplified": "乘车",
+            "traditional": "乘車",
+            "pinyin": "cheng2 che1",
+            "definition": "to ride (in a car or carriage); to drive; to motor",
+            "hsk_level": {
+                "combined": 5,
+                "old": null,
+                "new": 5
+            },
+            "frequency_rank": 11520,
+            "radical": "丿",
+            "match_type": "fts_exact",
+            "relevance_score": 1,
+            "parts_of_speech": [
+                "v"
+            ],
+            "classifiers": [],
+            "transcriptions": {
+                "pinyin": "chéng chē",
+                "numeric": "cheng2 che1",
+                "wadegiles": "ch'eng² ch'e¹",
+                "bopomofo": "ㄔㄥˊ ㄔㄜ",
+                "romatzyh": "cherng che"
+            },
+            "meanings": [
+                "to ride (in a car or carriage)",
+                "to drive",
+                "to motor"
+            ]
+        },
+        {
+            "id": 104140,
+            "simplified": "车号",
+            "traditional": "車號",
+            "pinyin": "che1 hao4",
+            "definition": "vehicle number (license plate number, taxi number, bus number, train car number)",
+            "hsk_level": {
+                "combined": 6,
+                "old": null,
+                "new": 6
+            },
+            "frequency_rank": 34947,
+            "radical": "车",
+            "match_type": "fts_exact",
+            "relevance_score": 1,
+            "parts_of_speech": [
+                "n"
+            ],
+            "classifiers": [],
+            "transcriptions": {
+                "pinyin": "chē hào",
+                "numeric": "che1 hao4",
+                "wadegiles": "ch'e¹ hao⁴",
+                "bopomofo": "ㄔㄜ ㄏㄠˋ",
+                "romatzyh": "che haw"
+            },
+            "meanings": [
+                "vehicle number (license plate number, taxi number, bus number, train car number)"
+            ]
+        },
+        {
+            "id": 104999,
+            "simplified": "轿车",
+            "traditional": "轎車",
+            "pinyin": "jiao4 che1",
+            "definition": "enclosed carriage for carrying passengers; motor carriage; car or bus; limousine; CL:部[bu4],輛|辆[liang4]",
+            "hsk_level": {
+                "combined": 7,
+                "old": null,
+                "new": 7
+            },
+            "frequency_rank": 3733,
+            "radical": "车",
+            "match_type": "fts_exact",
+            "relevance_score": 1,
+            "parts_of_speech": [
+                "n"
+            ],
+            "classifiers": [
+                "部",
+                "辆"
+            ],
+            "transcriptions": {
+                "pinyin": "jiào chē",
+                "numeric": "jiao4 che1",
+                "wadegiles": "chiao⁴ ch'e¹",
+                "bopomofo": "ㄐㄧㄠˋ ㄔㄜ",
+                "romatzyh": "jiaw che"
+            },
+            "meanings": [
+                "enclosed carriage for carrying passengers",
+                "motor carriage",
+                "car or bus",
+                "limousine"
+            ]
+        },
+        {
+            "id": 104132,
+            "simplified": "车祸",
+            "traditional": "車禍",
+            "pinyin": "che1 huo4",
+            "definition": "traffic accident; car crash; CL:起[qi3]",
+            "hsk_level": {
+                "combined": 7,
+                "old": null,
+                "new": 7
+            },
+            "frequency_rank": 4500,
+            "radical": "车",
+            "match_type": "fts_exact",
+            "relevance_score": 1,
+            "parts_of_speech": [
+                "n"
+            ],
+            "classifiers": [
+                "场"
+            ],
+            "transcriptions": {
+                "pinyin": "chē huò",
+                "numeric": "che1 huo4",
+                "wadegiles": "ch'e¹ huo⁴",
+                "bopomofo": "ㄔㄜ ㄏㄨㄛˋ",
+                "romatzyh": "che huoh"
+            },
+            "meanings": [
+                "traffic accident",
+                "car crash"
+            ]
+        },
+        {
+            "id": 11873,
+            "simplified": "公车",
+            "traditional": "公車",
+            "pinyin": "gong1 che1",
+            "definition": "bus; abbr. for 公共汽車|公共汽车[gong1 gong4 qi4 che1]; car belonging to an organization and used by its members (government car, police car, company car etc); abbr. for 公務用車|公务用车[gong1 wu4 yong4 che1]",
+            "hsk_level": {
+                "combined": 7,
+                "old": null,
+                "new": 7
+            },
+            "frequency_rank": 6859,
+            "radical": "八",
+            "match_type": "fts_exact",
+            "relevance_score": 1,
+            "parts_of_speech": [
+                "n"
+            ],
+            "classifiers": [],
+            "transcriptions": {
+                "pinyin": "gōng chē",
+                "numeric": "gong1 che1",
+                "wadegiles": "kung¹ ch'e¹",
+                "bopomofo": "ㄍㄨㄥ ㄔㄜ",
+                "romatzyh": "gong che"
+            },
+            "meanings": [
+                "bus",
+                "abbr. for 公共汽车",
+                "car belonging to an organization and used by its members (government car, police car, company car etc)",
+                "abbr. for 公务用车"
+            ]
+        },
+        {
+            "id": 70452,
+            "simplified": "牌照",
+            "traditional": "牌照",
+            "pinyin": "pai2 zhao4",
+            "definition": "(business) license; vehicle license; car registration; license plate",
+            "hsk_level": {
+                "combined": 7,
+                "old": null,
+                "new": 7
+            },
+            "frequency_rank": 8347,
+            "radical": "片",
+            "match_type": "fts_exact",
+            "relevance_score": 1,
+            "parts_of_speech": [
+                "n"
+            ],
+            "classifiers": [],
+            "transcriptions": {
+                "pinyin": "pái zhào",
+                "numeric": "pai2 zhao4",
+                "wadegiles": "p'ai² chao⁴",
+                "bopomofo": "ㄆㄞˊ ㄓㄠˋ",
+                "romatzyh": "pair jaw"
+            },
+            "meanings": [
+                "(business) license",
+                "vehicle license",
+                "car registration",
+                "license plate"
+            ]
+        },
+        {
+            "id": 85281,
+            "simplified": "线条",
+            "traditional": "線條",
+            "pinyin": "xian4 tiao2",
+            "definition": "line (in drawing, calligraphy etc); the lines or contours of a three-dimensional object (hairstyle, clothing, car etc)",
+            "hsk_level": {
+                "combined": 7,
+                "old": null,
+                "new": 7
+            },
+            "frequency_rank": 8512,
+            "radical": "纟",
+            "match_type": "fts_exact",
+            "relevance_score": 1,
+            "parts_of_speech": [
+                "n"
+            ],
+            "classifiers": [],
+            "transcriptions": {
+                "pinyin": "xiàn tiáo",
+                "numeric": "xian4 tiao2",
+                "wadegiles": "hsien⁴ t'iao²",
+                "bopomofo": "ㄒㄧㄢˋ ㄊㄧㄠˊ",
+                "romatzyh": "shiann tyau"
+            },
+            "meanings": [
+                "line (in drawing, calligraphy etc)",
+                "the lines or contours of a three-dimensional object (hairstyle, clothing, car etc)"
+            ]
+        },
+        {
+            "id": 104099,
+            "simplified": "车型",
+            "traditional": "車型",
+            "pinyin": "che1 xing2",
+            "definition": "vehicle model (i.e. particular version of a car or motorcycle etc)",
+            "hsk_level": {
+                "combined": 7,
+                "old": null,
+                "new": 7
+            },
+            "frequency_rank": 10111,
+            "radical": "车",
+            "match_type": "fts_exact",
+            "relevance_score": 1,
+            "parts_of_speech": [
+                "n"
+            ],
+            "classifiers": [],
+            "transcriptions": {
+                "pinyin": "chē xíng",
+                "numeric": "che1 xing2",
+                "wadegiles": "ch'e¹ hsing²",
+                "bopomofo": "ㄔㄜ ㄒㄧㄥˊ",
+                "romatzyh": "che shyng"
+            },
+            "meanings": [
+                "vehicle model (i.e. particular version of a car or motorcycle etc)"
+            ]
+        },
+        {
+            "id": 9183,
+            "simplified": "停放",
+            "traditional": "停放",
+            "pinyin": "ting2 fang4",
+            "definition": "to park (a car etc); to moor (a boat etc); to leave sth (in a place)",
+            "hsk_level": {
+                "combined": 7,
+                "old": null,
+                "new": 7
+            },
+            "frequency_rank": 20324,
+            "radical": "亻",
+            "match_type": "fts_exact",
+            "relevance_score": 1,
+            "parts_of_speech": [
+                "v"
+            ],
+            "classifiers": [],
+            "transcriptions": {
+                "pinyin": "tíng fàng",
+                "numeric": "ting2 fang4",
+                "wadegiles": "t'ing² fang⁴",
+                "bopomofo": "ㄊㄧㄥˊ ㄈㄤˋ",
+                "romatzyh": "tyng fanq"
+            },
+            "meanings": [
+                "to park (a car etc)",
+                "to moor (a boat etc)",
+                "to leave sth (in a place)"
+            ]
+        },
+        {
+            "id": 105605,
+            "simplified": "追尾",
+            "traditional": "追尾",
+            "pinyin": "zhui1 wei3",
+            "definition": "to tailgate; to hit the car in front as a result of tailgating",
+            "hsk_level": {
+                "combined": 7,
+                "old": null,
+                "new": 7
+            },
+            "frequency_rank": 1000000,
+            "radical": "辶",
+            "match_type": "fts_exact",
+            "relevance_score": 1,
+            "parts_of_speech": [],
+            "classifiers": [],
+            "transcriptions": {
+                "pinyin": "zhuī wěi",
+                "numeric": "zhui1 wei3",
+                "wadegiles": "chui¹ wei³",
+                "bopomofo": "ㄓㄨㄟ ㄨㄟˇ",
+                "romatzyh": "juei woei"
+            },
+            "meanings": [
+                "to tailgate",
+                "to hit the car in front as a result of tailgating"
+            ]
+        },
+        {
+            "id": 13,
+            "simplified": "4S店",
+            "traditional": "4S店",
+            "pinyin": "4S - dian4",
+            "definition": "authorized full-service car dealership (offering sales, spare parts, after-sales service and customer support)",
+            "hsk_level": {
+                "combined": null,
+                "old": null,
+                "new": null
+            },
+            "frequency_rank": null,
+            "radical": null,
+            "match_type": "fts_exact",
+            "relevance_score": 1,
+            "parts_of_speech": [],
+            "classifiers": [],
+            "transcriptions": {},
+            "meanings": [
+                "authorized full-service car dealership (offering sales, spare parts, after-sales service and customer support)"
+            ]
+        },
+        {
+            "id": 1746,
+            "simplified": "上空洗车",
+            "traditional": "上空洗車",
+            "pinyin": "shang4 kong1 xi3 che1",
+            "definition": "topless car wash",
+            "hsk_level": {
+                "combined": null,
+                "old": null,
+                "new": null
+            },
+            "frequency_rank": null,
+            "radical": null,
+            "match_type": "fts_exact",
+            "relevance_score": 1,
+            "parts_of_speech": [],
+            "classifiers": [],
+            "transcriptions": {},
+            "meanings": [
+                "topless car wash"
+            ]
+        },
+        {
+            "id": 5425,
+            "simplified": "交通意外",
+            "traditional": "交通意外",
+            "pinyin": "jiao1 tong1 yi4 wai4",
+            "definition": "traffic accident; car crash",
+            "hsk_level": {
+                "combined": null,
+                "old": null,
+                "new": null
+            },
+            "frequency_rank": null,
+            "radical": null,
+            "match_type": "fts_exact",
+            "relevance_score": 1,
+            "parts_of_speech": [],
+            "classifiers": [],
+            "transcriptions": {},
+            "meanings": [
+                "traffic accident; car crash"
+            ]
+        },
+        {
+            "id": 7101,
+            "simplified": "低尾气排放",
+            "traditional": "低尾氣排放",
+            "pinyin": "di1 wei3 qi4 pai2 fang4",
+            "definition": "low emissions (from car exhaust)",
+            "hsk_level": {
+                "combined": null,
+                "old": null,
+                "new": null
+            },
+            "frequency_rank": null,
+            "radical": null,
+            "match_type": "fts_exact",
+            "relevance_score": 1,
+            "parts_of_speech": [],
+            "classifiers": [],
+            "transcriptions": {},
+            "meanings": [
+                "low emissions (from car exhaust)"
+            ]
+        },
+        {
+            "id": 8308,
+            "simplified": "信号灯",
+            "traditional": "信號燈",
+            "pinyin": "xin4 hao4 deng1",
+            "definition": "signal light; car indicator",
+            "hsk_level": {
+                "combined": null,
+                "old": null,
+                "new": null
+            },
+            "frequency_rank": null,
+            "radical": null,
+            "match_type": "fts_exact",
+            "relevance_score": 1,
+            "parts_of_speech": [],
+            "classifiers": [],
+            "transcriptions": {},
+            "meanings": [
+                "signal light; car indicator"
+            ]
+        },
+        {
+            "id": 9259,
+            "simplified": "健诊",
+            "traditional": "健診",
+            "pinyin": "jian4 zhen3",
+            "definition": "check-up (health, car safety, environment etc)",
+            "hsk_level": {
+                "combined": null,
+                "old": null,
+                "new": null
+            },
+            "frequency_rank": null,
+            "radical": null,
+            "match_type": "fts_exact",
+            "relevance_score": 1,
+            "parts_of_speech": [],
+            "classifiers": [],
+            "transcriptions": {},
+            "meanings": [
+                "check-up (health, car safety, environment etc)"
+            ]
+        }
+    ],
+    "pagination": {
+        "page": 1,
+        "page_size": 20,
+        "total_count": 215,
+        "total_pages": 11
+    }
+}

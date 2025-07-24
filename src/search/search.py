@@ -290,23 +290,60 @@ def search_pinyin(text: str, cursor, limit: int = 20, offset: int = 0) -> List[D
 def search_english(text: str, cursor, limit: int = 20, offset: int = 0) -> List[Dict[str, Any]]:
     """
     Search for English text using FTS and rank by:
-    1. FTS match quality score
-    2. HSK level
-    3. Frequency ranking
+    1. Direct translation match (for single words)
+    2. FTS match quality score
+    3. HSK level
+    4. Frequency ranking
     """
     # Preprocess the English text
     # For multi-word queries, use the original text
     # For single-word queries, try both the original and with wildcards
     words = text.split()
+    is_single_word = len(words) == 1
 
-    if len(words) > 1:
+    if not is_single_word:
         # Multi-word query - use as is for better phrase matching
         fts_query = text
     else:
         # Single word query - use wildcards for better matching
         fts_query = f"{text}*"
 
-    # Try exact match first
+    # For single word queries, prioritize direct translations
+    if is_single_word:
+        # First, try to find direct translations where the word appears at the beginning of the definition
+        # This will prioritize entries like "car; automobile; bus" for the query "car"
+        query = """
+                SELECT d.id, \
+                       d.simplified, \
+                       d.traditional, \
+                       d.pinyin, \
+                       d.english_definitions,
+                       d.hsk_level, \
+                       d.frequency_rank, \
+                       d.radical, \
+                       d.old_hsk_level, \
+                       d.new_hsk_level,
+                       'direct_translation' as match_type,
+                       2.0                  as relevance_score
+                FROM dictionaryentry d
+                WHERE d.english_definitions LIKE ? OR d.english_definitions LIKE ?
+                ORDER BY CASE \
+                             WHEN d.hsk_level IS NULL THEN 999 \
+                             ELSE d.hsk_level \
+                             END ASC, \
+                         CASE \
+                             WHEN d.frequency_rank IS NULL THEN 999999 \
+                             ELSE d.frequency_rank \
+                             END ASC LIMIT ? \
+                OFFSET ? \
+                """
+        cursor.execute(query, (f"{text};%", f"{text},%", limit, offset))
+        results = cursor.fetchall()
+        
+        if results:
+            return format_results(results)
+
+    # Try exact match next
     query = """
             SELECT d.id, \
                    d.simplified, \
