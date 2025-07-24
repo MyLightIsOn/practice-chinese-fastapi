@@ -308,6 +308,8 @@ def search_english(text: str, cursor, limit: int = 20, offset: int = 0) -> List[
         # Single word query - use wildcards for better matching
         fts_query = f"{text}*"
 
+    all_results = []
+    
     # For single word queries, prioritize direct translations
     if is_single_word:
         # First, try to find direct translations where the word appears at the beginning of the definition
@@ -334,14 +336,13 @@ def search_english(text: str, cursor, limit: int = 20, offset: int = 0) -> List[
                          CASE \
                              WHEN d.frequency_rank IS NULL THEN 999999 \
                              ELSE d.frequency_rank \
-                             END ASC LIMIT ? \
-                OFFSET ? \
+                             END ASC
                 """
-        cursor.execute(query, (f"{text};%", f"{text},%", limit, offset))
-        results = cursor.fetchall()
+        cursor.execute(query, (f"{text};%", f"{text},%"))
+        direct_results = cursor.fetchall()
         
-        if results:
-            return format_results(results)
+        if direct_results:
+            all_results.extend(direct_results)
 
     # Try exact match next
     query = """
@@ -366,74 +367,86 @@ def search_english(text: str, cursor, limit: int = 20, offset: int = 0) -> List[
                      CASE \
                          WHEN d.frequency_rank IS NULL THEN 999999 \
                          ELSE d.frequency_rank \
-                         END ASC LIMIT ? \
-            OFFSET ? \
+                         END ASC
             """
-    cursor.execute(query, (f"% {text} %", limit, offset))
-    results = cursor.fetchall()
+    cursor.execute(query, (f"% {text} %",))
+    exact_results = cursor.fetchall()
+    if exact_results:
+        all_results.extend(exact_results)
 
-    # If no exact matches, try FTS
-    if not results:
-        query = """
-                SELECT d.id, \
-                       d.simplified, \
-                       d.traditional, \
-                       d.pinyin, \
-                       d.english_definitions,
-                       d.hsk_level, \
-                       d.frequency_rank, \
-                       d.radical, \
-                       d.old_hsk_level, \
-                       d.new_hsk_level,
-                       'fts' as match_type,
-                       0.9   as relevance_score
-                FROM dictionaryentry d
-                         JOIN (SELECT id, rank \
-                               FROM fts_english_definitions \
-                               WHERE content MATCH ? \
-                               ORDER BY rank) as fts ON d.id = fts.id
-                ORDER BY fts.rank, \
-                         CASE \
-                             WHEN d.hsk_level IS NULL THEN 999 \
-                             ELSE d.hsk_level \
-                             END ASC, \
-                         CASE \
-                             WHEN d.frequency_rank IS NULL THEN 999999 \
-                             ELSE d.frequency_rank \
-                             END ASC LIMIT ? \
-                OFFSET ? \
-                """
-        cursor.execute(query, (fts_query, limit, offset))
-        results = cursor.fetchall()
+    # Try FTS
+    query = """
+            SELECT d.id, \
+                   d.simplified, \
+                   d.traditional, \
+                   d.pinyin, \
+                   d.english_definitions,
+                   d.hsk_level, \
+                   d.frequency_rank, \
+                   d.radical, \
+                   d.old_hsk_level, \
+                   d.new_hsk_level,
+                   'fts' as match_type,
+                   0.9   as relevance_score
+            FROM dictionaryentry d
+                     JOIN (SELECT id, rank \
+                           FROM fts_english_definitions \
+                           WHERE content MATCH ? \
+                           ORDER BY rank) as fts ON d.id = fts.id
+            ORDER BY fts.rank, \
+                     CASE \
+                         WHEN d.hsk_level IS NULL THEN 999 \
+                         ELSE d.hsk_level \
+                         END ASC, \
+                     CASE \
+                         WHEN d.frequency_rank IS NULL THEN 999999 \
+                         ELSE d.frequency_rank \
+                         END ASC
+            """
+    cursor.execute(query, (fts_query,))
+    fts_results = cursor.fetchall()
+    if fts_results:
+        all_results.extend(fts_results)
 
-    # If still no results, try a more relaxed LIKE search
-    if not results:
-        query = """
-                SELECT d.id, \
-                       d.simplified, \
-                       d.traditional, \
-                       d.pinyin, \
-                       d.english_definitions,
-                       d.hsk_level, \
-                       d.frequency_rank, \
-                       d.radical, \
-                       d.old_hsk_level, \
-                       d.new_hsk_level,
-                       'partial' as match_type,
-                       0.5       as relevance_score
-                FROM dictionaryentry d
-                WHERE d.english_definitions LIKE ?
-                ORDER BY CASE \
-                             WHEN d.hsk_level IS NULL THEN 999 \
-                             ELSE d.hsk_level \
-                             END ASC, \
-                         CASE \
-                             WHEN d.frequency_rank IS NULL THEN 999999 \
-                             ELSE d.frequency_rank \
-                             END ASC LIMIT ? \
-                OFFSET ? \
-                """
-        cursor.execute(query, (f"%{text}%", limit, offset))
-        results = cursor.fetchall()
+    # Try a more relaxed LIKE search
+    query = """
+            SELECT d.id, \
+                   d.simplified, \
+                   d.traditional, \
+                   d.pinyin, \
+                   d.english_definitions,
+                   d.hsk_level, \
+                   d.frequency_rank, \
+                   d.radical, \
+                   d.old_hsk_level, \
+                   d.new_hsk_level,
+                   'partial' as match_type,
+                   0.5       as relevance_score
+            FROM dictionaryentry d
+            WHERE d.english_definitions LIKE ?
+            ORDER BY CASE \
+                         WHEN d.hsk_level IS NULL THEN 999 \
+                         ELSE d.hsk_level \
+                         END ASC, \
+                     CASE \
+                         WHEN d.frequency_rank IS NULL THEN 999999 \
+                         ELSE d.frequency_rank \
+                         END ASC
+            """
+    cursor.execute(query, (f"%{text}%",))
+    partial_results = cursor.fetchall()
+    if partial_results:
+        all_results.extend(partial_results)
 
-    return format_results(results)
+    # Remove duplicates based on entry ID
+    seen_ids = set()
+    unique_results = []
+    for result in all_results:
+        if result[0] not in seen_ids:  # Check if ID is already seen
+            seen_ids.add(result[0])
+            unique_results.append(result)
+
+    # Apply pagination to the combined results
+    paginated_results = unique_results[offset:offset + limit]
+
+    return format_results(paginated_results)

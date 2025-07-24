@@ -1,9 +1,15 @@
 import sqlite3
 import json
+import sys
+import os
+
+# Add the repository root to the Python path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from src.search.search import search_english
 
 # Connect to the database
-conn = sqlite3.connect('../cedict.db')
+conn = sqlite3.connect('cedict.db')
 conn.row_factory = sqlite3.Row
 cursor = conn.cursor()
 
