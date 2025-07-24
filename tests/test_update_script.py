@@ -1,14 +1,14 @@
 import json
 import sqlite3
 import sys
-from update_hsk_frequency import extract_hsk_levels, extract_radical, extract_pos, extract_classifiers, extract_transcriptions, extract_meanings
+from archive.update_hsk_frequency import extract_hsk_levels, extract_radical, extract_pos, extract_classifiers, extract_transcriptions, extract_meanings
 
 def test_update_with_sample():
     """
     Test the update functions with a small sample of data from complete.json
     """
     print("Loading complete.json...")
-    with open('complete.json', 'r', encoding='utf-8') as f:
+    with open('../complete.json', 'r', encoding='utf-8') as f:
         data = json.load(f)
     
     # Take only the first 10 entries for testing
@@ -17,7 +17,7 @@ def test_update_with_sample():
     
     # Connect to the database
     print("Connecting to database...")
-    conn = sqlite3.connect('cedict.db')
+    conn = sqlite3.connect('../cedict.db')
     cursor = conn.cursor()
     
     # Enable foreign keys

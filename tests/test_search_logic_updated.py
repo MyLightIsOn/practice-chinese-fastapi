@@ -3,7 +3,7 @@ import json
 from typing import Dict, Any
 
 # Import functions directly from source modules
-sys.path.append('.')
+sys.path.append('..')
 from src.api.endpoints import lookup
 from src.detection.input_detection import detect_input_type
 

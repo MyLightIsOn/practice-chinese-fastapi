@@ -5,7 +5,7 @@ from src.search.search import search_chinese, search_pinyin, search_english
 
 def test_search_function(search_func, query, description):
     """Test a search function with a sample query."""
-    conn = sqlite3.connect("cedict.db")
+    conn = sqlite3.connect("../cedict.db")
     cursor = conn.cursor()
     
     print(f"\nTesting {description} for query: '{query}'")

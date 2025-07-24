@@ -8,16 +8,6 @@ from src.search.search import search_chinese, search_pinyin, search_english
 
 router = APIRouter()
 
-@router.get("/")
-async def root():
-    return {"message": "Hello World"}
-
-
-@router.get("/hello/{name}")
-async def say_hello(name: str):
-    return {"message": f"Hello {name}"}
-
-
 class MatchType(str, Enum):
     EXACT = "exact"
     CONTAINS = "contains"
