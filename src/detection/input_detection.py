@@ -19,8 +19,33 @@ def contains_chinese(text: str) -> bool:
 def is_pinyin(text: str) -> bool:
     """Check if the input matches pinyin patterns."""
     # Common English words that should not be detected as Pinyin
-    common_english_words = ['hello', 'food', 'good', 'bad', 'the', 'and', 'for', 'with', 'from',
-                            'morning', 'evening', 'night', 'day', 'week', 'month', 'year']
+    common_english_words = [
+        # Articles
+        'a', 'an', 'the',
+
+        # Prepositions
+        'in', 'on', 'at', 'to', 'of', 'by', 'for', 'with', 'from', 'about',
+
+        # Conjunctions
+        'and', 'but', 'or', 'because', 'if', 'when', 'while',
+
+        # Pronouns
+        'i', 'you', 'he', 'she', 'it', 'we', 'they', 'my', 'your', 'his', 'her', 'our', 'their',
+
+        # Common verbs
+        'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did',
+        'go', 'see', 'want', 'know', 'think', 'make', 'take', 'get', 'come', 'say',
+
+        # Question words
+        'what', 'who', 'where', 'when', 'why', 'how',
+
+        # Common nouns and adjectives
+        'hello', 'food', 'good', 'bad', 'new', 'old', 'big', 'small', 'many', 'much',
+        'morning', 'evening', 'night', 'day', 'week', 'month', 'year', 'time', 'people',
+
+        # Demonstratives and common adverbs
+        'this', 'that', 'these', 'those', 'there', 'here', 'now', 'then', 'very', 'too'
+    ]
 
     # If it's a common English word, it's not Pinyin
     if text.lower() in common_english_words:
