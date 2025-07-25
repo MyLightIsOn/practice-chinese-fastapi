@@ -1,4 +1,15 @@
 import re
+import os
+
+# Read the pinyin list from the file
+pinyin_list_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'pinyin_list')
+with open(pinyin_list_path, 'r') as f:
+    content = f.read()
+    # Extract the list items from the file content
+    # The file format is: pinyin_list = ["a", "ai", ...]
+    content = content.replace('pinyin_list = [', '').replace(']', '')
+    # Split by commas and clean up each item
+    pinyin_list = [item.strip().strip('"\'') for item in content.split(',') if item.strip()]
 
 def contains_chinese(text: str) -> bool:
     """Check if the input contains Chinese characters."""
@@ -18,117 +29,46 @@ def contains_chinese(text: str) -> bool:
 
 def is_pinyin(text: str) -> bool:
     """Check if the input matches pinyin patterns."""
-    # Common English words that should not be detected as Pinyin
-    common_english_words = [
-        # Articles
-        'a', 'an', 'the',
-
-        # Prepositions
-        'in', 'on', 'at', 'to', 'of', 'by', 'for', 'with', 'from', 'about',
-
-        # Conjunctions
-        'and', 'but', 'or', 'because', 'if', 'when', 'while',
-
-        # Pronouns
-        'i', 'you', 'he', 'she', 'it', 'we', 'they', 'my', 'your', 'his', 'her', 'our', 'their',
-
-        # Common verbs
-        'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did',
-        'go', 'see', 'want', 'know', 'think', 'make', 'take', 'get', 'come', 'say',
-        'can', 'could', 'will', 'would', 'should', 'may', 'might', 'must',
-
-        # Question words
-        'what', 'who', 'where', 'when', 'why', 'how',
-
-        # Common nouns and adjectives
-        'hello', 'food', 'good', 'bad', 'new', 'old', 'big', 'small', 'many', 'much',
-        'morning', 'evening', 'night', 'day', 'week', 'month', 'year', 'time', 'people',
-        'car', 'bus', 'train', 'bike', 'book', 'pen', 'dog', 'cat', 'man', 'woman', 'boy', 'girl',
-        'house', 'home', 'work', 'job', 'school', 'class', 'room', 'door', 'window', 'wall',
-        'water', 'food', 'tea', 'coffee', 'milk', 'bread', 'rice', 'meat', 'fish', 'fruit',
-        'red', 'blue', 'green', 'yellow', 'black', 'white', 'color', 'hot', 'cold', 'warm',
-        'fan', 'run', 'sun', 'fun', 'gun', 'hat', 'bat', 'rat', 'mat', 'sat', 'fat',
-        'cup', 'up', 'top', 'stop', 'shop', 'drop', 'hop', 'pop', 'mop', 'cop',
-
-        # Demonstratives and common adverbs
-        'this', 'that', 'these', 'those', 'there', 'here', 'now', 'then', 'very', 'too'
-    ]
-
-    # If it's a common English word, it's not Pinyin
-    if text.lower() in common_english_words:
-        return False
-
-    # If it contains multiple words, check if it looks like an English phrase
-    words = text.split()
-    if len(words) > 1:
-        # If any word is a common English word, likely not Pinyin
-        for word in words:
-            if word.lower() in common_english_words:
-                return False
-
-        # If it has more than 3 words, likely an English phrase
-        if len(words) > 3:
-            return False
-
-    # Check for English-specific patterns (consonant clusters that don't exist in pinyin)
-    english_patterns = [
-        r'[qwrtypsdfghjklzxcvbnm]{3,}',  # 3+ consecutive consonants
-        r'[^aeiou]r[^aeiou]',  # 'r' between consonants (like "car")
-        r'[^aeiou]l[^aeiou]',  # 'l' between consonants
-        r'ck', r'sh', r'th', r'ph', r'gh',  # Common English consonant pairs
-        r'[^aeiou]y$',  # Words ending with consonant + 'y'
-        r'ed$', r'ing$', r'ly$', r'ment$', r'tion$', r'ness$'  # Common English suffixes
-    ]
+    # First, check if the text is in the pinyin_list
+    # For single words without tone numbers
+    if ' ' not in text and not re.search(r'[1-4]', text):
+        if text.lower() in pinyin_list:
+            return True
     
-    for pattern in english_patterns:
-        if re.search(pattern, text.lower()):
-            return False
-
-    # If the text contains digits 1-4 (tone markers), it's likely pinyin
+    # For words with tone numbers, remove the tone numbers and check
     if re.search(r'[1-4]', text):
-        # Check if it's a valid pinyin pattern with tones
-        # Allow for formats like "ni3hao3" without spaces
-        if re.match(r'^([a-zA-Z]+[1-4])+$', text):
+        base_text = re.sub(r'[1-4]', '', text)
+        if base_text.lower() in pinyin_list:
             return True
-
-    # For single words without tone numbers, check if it's a valid pinyin syllable
-    if len(words) == 0 and not re.search(r'[1-4]', text):
-        # Common pinyin syllables without tones
-        common_syllables = ['zhi', 'chi', 'shi', 'ri', 'zi', 'ci', 'si', 'yi', 'wu', 'yu', 'ye', 'yue', 'yuan',
-                            'yin', 'yun', 'ying', 'wa', 'wo', 'wai', 'wei', 'wan', 'wen', 'wang', 'weng',
-                            'ni', 'hao', 'ma', 'de', 'le', 'ba', 'ge', 'ne', 'la', 'a', 'ai', 'an', 'ang',
-                            'ao', 'e', 'ei', 'en', 'er', 'o', 'ou']
-
-        # If it's a common pinyin syllable, it's Pinyin
-        if text.lower() in common_syllables:
+        
+        # For formats like "ni3hao3" without spaces, try to split into syllables
+        potential_syllables = re.findall(r'[a-zA-Z]+[1-4]?', text)
+        all_valid = True
+        for syllable in potential_syllables:
+            # Remove tone number if present
+            base_syllable = re.sub(r'[1-4]$', '', syllable)
+            if base_syllable.lower() not in pinyin_list:
+                all_valid = False
+                break
+        
+        if all_valid and len(potential_syllables) > 0:
             return True
-            
-        # Check for valid pinyin initial-final combinations
-        valid_initials = ['b', 'p', 'm', 'f', 'd', 't', 'n', 'l', 'g', 'k', 'h', 'j', 'q', 'x', 'zh', 'ch', 'sh', 'r', 'z', 'c', 's', 'y', 'w']
-        valid_finals = ['a', 'o', 'e', 'i', 'u', 'v', 'ai', 'ei', 'ui', 'ao', 'ou', 'iu', 'ie', 'ue', 'er', 'an', 'en', 'in', 'un', 'vn', 'ang', 'eng', 'ing', 'ong']
-        
-        # If the word doesn't follow pinyin syllable structure, it's not pinyin
-        is_valid_pinyin = False
-        for initial in valid_initials:
-            if text.lower().startswith(initial):
-                remainder = text.lower()[len(initial):]
-                if remainder in valid_finals:
-                    is_valid_pinyin = True
-                    break
-        
-        # Special case for syllables that are just finals
-        if not is_valid_pinyin and text.lower() in valid_finals:
-            is_valid_pinyin = True
-            
-        return is_valid_pinyin
-
-    # Basic pinyin pattern: letters possibly followed by tone numbers 1-4
-    pinyin_pattern = r'^[a-zA-Z]+[1-4]?$'
     
-    # Check each word in the input if it contains spaces
+    # For words with spaces, check each word against the pinyin_list
+    words = text.split()
     if words:
-        return all(re.match(pinyin_pattern, word) for word in words)
-
+        all_valid = True
+        for word in words:
+            # Remove tone numbers if present
+            base_word = re.sub(r'[1-4]$', '', word)
+            if base_word.lower() not in pinyin_list:
+                all_valid = False
+                break
+        
+        if all_valid:
+            return True
+    
+    # If none of the above checks passed, it's not pinyin
     return False
 
 
@@ -146,7 +86,7 @@ def is_english(text: str) -> bool:
         # Transportation
         'car', 'bus', 'train', 'bike', 'walk', 'drive', 'fly', 'travel',
         # Common nouns
-        'book', 'pen', 'dog', 'cat', 'man', 'woman', 'boy', 'girl', 'child',
+        'book', 'pen', 'dog', 'cat', 'goat', 'man', 'woman', 'boy', 'girl', 'child',
         'house', 'home', 'work', 'job', 'school', 'class', 'room', 'door',
         # Food and drink
         'water', 'tea', 'coffee', 'milk', 'bread', 'rice', 'meat', 'fish', 'fruit'
@@ -206,14 +146,8 @@ def detect_input_type(text: str) -> str:
     if contains_chinese(text):
         return "chinese"
     
-    # Check for valid pinyin syllables first
-    common_syllables = ['zhi', 'chi', 'shi', 'ri', 'zi', 'ci', 'si', 'yi', 'wu', 'yu', 'ye', 'yue', 'yuan',
-                        'yin', 'yun', 'ying', 'wa', 'wo', 'wai', 'wei', 'wan', 'wen', 'wang', 'weng',
-                        'ni', 'hao', 'ma', 'de', 'le', 'ba', 'ge', 'ne', 'la', 'a', 'ai', 'an', 'ang',
-                        'ao', 'e', 'ei', 'en', 'er', 'o', 'ou']
-    
-    # If it's a single word that exactly matches a common pinyin syllable, prioritize pinyin
-    if text.lower() in common_syllables:
+    # If it's a single word that exactly matches a pinyin syllable, prioritize pinyin
+    if text.lower() in pinyin_list:
         return "pinyin"
     
     # If it contains tone numbers, it's definitely pinyin

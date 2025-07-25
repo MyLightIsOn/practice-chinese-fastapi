@@ -1,7 +1,8 @@
 import re
 from typing import List, Dict, Any
-from src.detection.input_detection import remove_tone_numbers
+from src.detection.input_detection import remove_tone_numbers, pinyin_list
 from src.db.connection import format_results
+from src.utils.pinyin_phrases import common_phrases_with_tones
 
 def search_chinese(text: str, cursor, limit: int = 20, offset: int = 0) -> List[Dict[str, Any]]:
     """
@@ -98,72 +99,20 @@ def preprocess_pinyin(text: str) -> List[str]:
 
     # If input has no spaces and no numbers, try common syllable breaks
     if ' ' not in text and not re.search(r'[1-4]', text):
-        # Common pinyin syllables
-        syllables = ['zhi', 'chi', 'shi', 'ri', 'zi', 'ci', 'si', 'yi', 'wu', 'yu', 'ye', 'yue', 'yuan',
-                     'yin', 'yun', 'ying', 'wa', 'wo', 'wai', 'wei', 'wan', 'wen', 'wang', 'weng']
+        # Use the comprehensive pinyin_list instead of hardcoded syllables
+        # Sort by length (longest first) to prioritize longer syllables
+        sorted_syllables = sorted(pinyin_list, key=len, reverse=True)
 
         # Try to break the text into syllables
-        for syllable in sorted(syllables, key=len, reverse=True):
+        for syllable in sorted_syllables:
             if text.startswith(syllable):
                 rest = text[len(syllable):]
                 if rest:
                     variants.append(f"{syllable} {rest}")
 
-        # For common combinations like "nihao", add specific variants
-        common_combinations = {
-            "nihao": "ni3 hao3", # hello
-            "zaoan": "zao3 an1", # good night
-            "xiexie": "xie4 xie5", # thank you
-            "duoshao": "duo1 shao3", # how much
-            "bukeqi": "bu4 ke4 qi5", # sorry
-            "meiguanxi": "mei2 guan1 xi5", # nevermind
-            "zaijian": "zai4 jian4", # goodbye
-            "mingbai": "ming2 bai5", # understand
-            "zhidao": "zhi1 dao5", # to know
-            "xiangxin": "xiang1 xin4", # believe
-            "ninhao": "nin2 hao3",  # Formal hello
-            "woheni": "wo3 he2 ni3",  # Me and you
-            "jintian": "jin1 tian1",  # Today
-            "mingtian": "ming2 tian1",  # Tomorrow
-            "zuotian": "zuo2 tian1",  # Yesterday
-            "xianzai": "xian4 zai4",  # Now
-            "dianhua": "dian4 hua4",  # Telephone
-            "gongzuo": "gong1 zuo4",  # Work
-            "xuexiao": "xue2 xiao4",  # School
-            "pengyou": "peng2 you5",  # Friend
-            "nihaoma": "ni3 hao3 ma5",  # How are you?
-            "nishishui": "ni3 shi4 shui2",  # Who are you?
-            "nihenshou": "ni3 hen3 shou4",  # Are you familiar with?
-            "niqunar": "ni3 qu4 na3 er5",  # Where are you going?
-            "nishina": "ni3 shi4 na3",  # Where are you from?
-            "zenmele": "zen3 me5 le5",  # What happened?
-            "weishenme": "wei4 shen2 me5",  # Why?
-            "wozhidao": "wo3 zhi1 dao4",  # I know
-            "wotingdong": "wo3 ting1 dong3",  # I understand
-            "wobuzhidao": "wo3 bu4 zhi1 dao4",  # I don't know
-            "wobuhui": "wo3 bu4 hui4",  # I can't
-            "woxiang": "wo3 xiang3",  # I think/want
-            "meiwenti": "mei2 wen4 ti2",  # No problem
-            "duibuqi": "dui4 bu5 qi3",  # Sorry
-            "yierbaosi": "yi1 er4 ba1 si4",  # 1, 2, 8, 4
-            "shijian": "shi2 jian1",  # Time
-            "shangjige": "shang4 ji3 ge5",  # Last few
-            "xiajiwei": "xia4 ji3 wei4",  # Next few
-            "chifan": "chi1 fan4",  # Eat
-            "shuijiao": "shui4 jiao4",  # Sleep
-            "kafei": "ka1 fei1",  # Coffee
-            "pijiu": "pi2 jiu3",  # Beer
-            "reshui": "re4 shui3",  # Hot water
-            "lengshuang": "leng3 shuang1",  # Cold
-            "woaini": "wo3 ai4 ni3",  # I love you
-            "henhaochi": "hen3 hao3 chi1",  # Very delicious
-            "xiexieni": "xie4 xie5 ni3",  # Thank you
-            "henhaoting": "hen3 hao3 ting1",  # Sounds good
-            "tingbuhao": "ting1 bu5 hao3",  # Don't understand well
-        }
-
-        if text.lower() in common_combinations:
-            variants.append(common_combinations[text.lower()])
+        # Check if this is a common phrase that we know the tones for
+        if text.lower() in common_phrases_with_tones:
+            variants.append(common_phrases_with_tones[text.lower()])
 
     # If input has spaces, also try without spaces
     if ' ' in text:
@@ -314,6 +263,7 @@ def search_english(text: str, cursor, limit: int = 20, offset: int = 0) -> List[
     if is_single_word:
         # First, try to find direct translations where the word appears at the beginning of the definition
         # This will prioritize entries like "car; automobile; bus" for the query "car"
+        # Also match entries that start with the search term followed by a space, like "cat (CL:隻|只[zhi1])"
         query = """
                 SELECT d.id, \
                        d.simplified, \
@@ -328,7 +278,7 @@ def search_english(text: str, cursor, limit: int = 20, offset: int = 0) -> List[
                        'direct_translation' as match_type,
                        2.0                  as relevance_score
                 FROM dictionaryentry d
-                WHERE d.english_definitions LIKE ? OR d.english_definitions LIKE ?
+                WHERE d.english_definitions LIKE ? OR d.english_definitions LIKE ? OR d.english_definitions LIKE ?
                 ORDER BY CASE \
                              WHEN d.hsk_level IS NULL THEN 999 \
                              ELSE d.hsk_level \
@@ -338,7 +288,7 @@ def search_english(text: str, cursor, limit: int = 20, offset: int = 0) -> List[
                              ELSE d.frequency_rank \
                              END ASC
                 """
-        cursor.execute(query, (f"{text};%", f"{text},%"))
+        cursor.execute(query, (f"{text};%", f"{text},%", f"{text} %"))
         direct_results = cursor.fetchall()
         
         if direct_results:
