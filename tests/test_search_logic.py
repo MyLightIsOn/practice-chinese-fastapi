@@ -17,7 +17,7 @@ def test_search(text: str, description: str):
     print(f"Detected input type: {input_type}")
     
     # Call the lookup function directly with actual values
-    result = lookup(text=text, page=1, page_size=20)
+    result = lookup(text=text, page=1, page_size=100)
     
     # Print the results
     pagination = result['pagination']

@@ -17,7 +17,7 @@ class MatchType(str, Enum):
 def lookup(
         text: str = Query(..., min_length=1),
         page: int = Query(1, ge=1, description="Page number for pagination"),
-        page_size: int = Query(20, ge=1, le=100, description="Number of results per page")
+        page_size: int = Query(100, ge=1, le=100, description="Number of results per page")
 ):
     """
     Lookup Chinese words based on the input text.

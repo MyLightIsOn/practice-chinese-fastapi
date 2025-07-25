@@ -18,7 +18,7 @@ print(json.dumps({
     "results": results[:5],  # Just show the first 5 results for brevity
     "pagination": {
         "page": 1,
-        "page_size": 20,
+        "page_size": 100,
         "total_count": len(results),
         "total_pages": 1
     }

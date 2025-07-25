@@ -26,7 +26,7 @@ This endpoint allows you to search for Chinese words based on the input text. Th
 |-----------|------|----------|---------|-------------|
 | text | string | Yes | - | The text to search for. Can be Chinese characters, Pinyin, or English. |
 | page | integer | No | 1 | Page number for pagination. Must be >= 1. |
-| page_size | integer | No | 20 | Number of results per page. Must be between 1 and 100. |
+| page_size | integer | No | 100 | Number of results per page. Must be between 1 and 100. |
 
 #### Input Detection
 
@@ -98,9 +98,9 @@ For single-word queries, wildcards are added (e.g., "word*") to improve matching
   ],
   "pagination": {
     "page": 1,
-    "page_size": 20,
+    "page_size": 100,
     "total_count": 42,
-    "total_pages": 3
+    "total_pages": 1
   }
 }
 ```
@@ -213,7 +213,7 @@ Response:
   ],
   "pagination": {
     "page": 1,
-    "page_size": 20,
+    "page_size": 100,
     "total_count": 1,
     "total_pages": 1
   }
@@ -258,7 +258,7 @@ Response:
   ],
   "pagination": {
     "page": 1,
-    "page_size": 20,
+    "page_size": 100,
     "total_count": 1,
     "total_pages": 1
   }
@@ -303,7 +303,7 @@ Response:
   ],
   "pagination": {
     "page": 1,
-    "page_size": 20,
+    "page_size": 100,
     "total_count": 1,
     "total_pages": 1
   }
