@@ -123,13 +123,6 @@ def preprocess_pinyin(text: str) -> List[str]:
 
 
 def search_pinyin(text: str, cursor, limit: int = 20, offset: int = 0) -> List[Dict[str, Any]]:
-    """
-    Search for Pinyin with priority:
-    1. Exact pinyin match (with tones)
-    2. Tone-insensitive match (remove tone numbers)
-    3. Partial pinyin match
-    """
-    all_results = []
 
     # Preprocess the pinyin input to handle different formats
     pinyin_variants = preprocess_pinyin(text)

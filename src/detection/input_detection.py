@@ -34,6 +34,21 @@ def is_pinyin(text: str) -> bool:
     if ' ' not in text and not re.search(r'[1-4]', text):
         if text.lower() in pinyin_list:
             return True
+            
+        # Check for multi-syllable pinyin words like "nihao"
+        if len(text) > 2:
+            # Try to split into potential pinyin syllables
+            for i in range(1, len(text)):
+                if text[:i].lower() in pinyin_list and text[i:].lower() in pinyin_list:
+                    return True
+                    
+            # Try to split into more than two syllables
+            for i in range(1, len(text) - 1):
+                for j in range(i + 1, len(text)):
+                    if (text[:i].lower() in pinyin_list and 
+                        text[i:j].lower() in pinyin_list and 
+                        text[j:].lower() in pinyin_list):
+                        return True
     
     # For words with tone numbers, remove the tone numbers and check
     if re.search(r'[1-4]', text):
@@ -77,25 +92,21 @@ def is_english(text: str) -> bool:
     # If it contains Chinese characters, it's not English
     if contains_chinese(text):
         return False
-
-    # Common English words that should be detected as English
-    common_english_words = [
-        # Basic words
-        'hello', 'food', 'good', 'bad', 'the', 'and', 'for', 'with', 'from',
-        'morning', 'evening', 'night', 'day', 'week', 'month', 'year',
-        # Transportation
-        'car', 'bus', 'train', 'bike', 'walk', 'drive', 'fly', 'travel',
-        # Common nouns
-        'book', 'pen', 'dog', 'cat', 'goat', 'man', 'woman', 'boy', 'girl', 'child',
-        'house', 'home', 'work', 'job', 'school', 'class', 'room', 'door',
-        # Food and drink
-        'water', 'tea', 'coffee', 'milk', 'bread', 'rice', 'meat', 'fish', 'fruit'
+    
+    # Common English words that are also valid pinyin syllables
+    # These words should be prioritized as English even though they are valid pinyin
+    common_english_words_also_pinyin = [
+        'can', 'fan', 'man', 'pen'
     ]
-
-    # If it's a common English word, it's English
-    if text.lower() in common_english_words:
+    
+    # If it's a common English word that's also a valid pinyin syllable, prioritize English
+    if text.lower() in common_english_words_also_pinyin:
         return True
-
+        
+    # If it's pinyin, it's not English
+    if is_pinyin(text):
+        return False
+        
     # Check for English-specific patterns
     english_patterns = [
         r'[qwrtypsdfghjklzxcvbnm]{3,}',  # 3+ consecutive consonants
@@ -110,20 +121,9 @@ def is_english(text: str) -> bool:
         if re.search(pattern, text.lower()):
             return True
 
-    # If it contains multiple words, check if it looks like an English phrase
-    words = text.split()
-    if len(words) > 1:
-        # If any word is a common English word, likely English
-        for word in words:
-            if word.lower() in common_english_words:
-                return True
-
-        # If it has more than 2 words, likely an English phrase
-        if len(words) > 2:
-            return True
-
     # Check if the text contains only English letters, spaces, and common punctuation
     if re.match(r'^[a-zA-Z\s.,;:!?\'"-]+$', text):
+        words = text.split()
         # For single words, check additional criteria
         if len(words) == 1 and len(text) > 1:
             # If it has no numbers and is longer than 3 characters, likely English
@@ -137,14 +137,25 @@ def is_english(text: str) -> bool:
             # Multiple words are more likely to be English than Pinyin
             return True
 
-    # If it's not Chinese and not Pinyin, we'll consider it English
-    return not is_pinyin(text)
+    # If we've reached this point, it's not Chinese, not Pinyin, and doesn't match English patterns
+    # Since we've already checked for pinyin, we can safely return True
+    return True
 
 
 def detect_input_type(text: str) -> str:
     """Detect the type of input: Chinese, Pinyin, or English."""
     if contains_chinese(text):
         return "chinese"
+    
+    # Common English words that are also valid pinyin syllables
+    # These words should be prioritized as English even though they are valid pinyin
+    common_english_words_also_pinyin = [
+        'can', 'fan', 'man', 'pen'
+    ]
+    
+    # If it's a common English word that's also a valid pinyin syllable, prioritize English
+    if text.lower() in common_english_words_also_pinyin:
+        return "english"
     
     # If it's a single word that exactly matches a pinyin syllable, prioritize pinyin
     if text.lower() in pinyin_list:
