@@ -1,3 +1,9 @@
+import sys
+import os
+
+# Add the project root to the Python path
+sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
+
 from src.detection.input_detection import detect_input_type, is_pinyin, is_english
 
 # Test various edge cases

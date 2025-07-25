@@ -1,6 +1,6 @@
 import re
 from typing import List, Dict, Any
-from src.detection.input_detection import remove_tone_numbers
+from src.detection.input_detection import remove_tone_numbers, pinyin_list
 from src.db.connection import format_results
 
 def search_chinese(text: str, cursor, limit: int = 20, offset: int = 0) -> List[Dict[str, Any]]:
@@ -98,12 +98,12 @@ def preprocess_pinyin(text: str) -> List[str]:
 
     # If input has no spaces and no numbers, try common syllable breaks
     if ' ' not in text and not re.search(r'[1-4]', text):
-        # Common pinyin syllables
-        syllables = ['zhi', 'chi', 'shi', 'ri', 'zi', 'ci', 'si', 'yi', 'wu', 'yu', 'ye', 'yue', 'yuan',
-                     'yin', 'yun', 'ying', 'wa', 'wo', 'wai', 'wei', 'wan', 'wen', 'wang', 'weng']
+        # Use the comprehensive pinyin_list instead of hardcoded syllables
+        # Sort by length (longest first) to prioritize longer syllables
+        sorted_syllables = sorted(pinyin_list, key=len, reverse=True)
 
         # Try to break the text into syllables
-        for syllable in sorted(syllables, key=len, reverse=True):
+        for syllable in sorted_syllables:
             if text.startswith(syllable):
                 rest = text[len(syllable):]
                 if rest:
@@ -314,6 +314,7 @@ def search_english(text: str, cursor, limit: int = 20, offset: int = 0) -> List[
     if is_single_word:
         # First, try to find direct translations where the word appears at the beginning of the definition
         # This will prioritize entries like "car; automobile; bus" for the query "car"
+        # Also match entries that start with the search term followed by a space, like "cat (CL:隻|只[zhi1])"
         query = """
                 SELECT d.id, \
                        d.simplified, \
@@ -328,7 +329,7 @@ def search_english(text: str, cursor, limit: int = 20, offset: int = 0) -> List[
                        'direct_translation' as match_type,
                        2.0                  as relevance_score
                 FROM dictionaryentry d
-                WHERE d.english_definitions LIKE ? OR d.english_definitions LIKE ?
+                WHERE d.english_definitions LIKE ? OR d.english_definitions LIKE ? OR d.english_definitions LIKE ?
                 ORDER BY CASE \
                              WHEN d.hsk_level IS NULL THEN 999 \
                              ELSE d.hsk_level \
@@ -338,7 +339,7 @@ def search_english(text: str, cursor, limit: int = 20, offset: int = 0) -> List[
                              ELSE d.frequency_rank \
                              END ASC
                 """
-        cursor.execute(query, (f"{text};%", f"{text},%"))
+        cursor.execute(query, (f"{text};%", f"{text},%", f"{text} %"))
         direct_results = cursor.fetchall()
         
         if direct_results:
