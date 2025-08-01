@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Query, HTTPException
 from enum import Enum
-from typing import Dict, Any
-
 from src.db.connection import get_connection
 from src.detection.input_detection import detect_input_type
 from src.search.search import search_chinese, search_pinyin, search_english
+from src.api.exercise_routes import router as exercise_router
 
 router = APIRouter()
+
+router.include_router(exercise_router, prefix="/exercises")
 
 class MatchType(str, Enum):
     EXACT = "exact"
