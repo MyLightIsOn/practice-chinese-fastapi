@@ -1,0 +1,23 @@
+# Core web framework
+fastapi>=0.109.0
+uvicorn>=0.27.0
+pydantic>=2.5.0
+
+# HTTP Client (for tests)
+requests>=2.31.0
+
+# Environment variable handling
+python-dotenv>=1.0.0
+
+# AI Agent framework dependencies
+openai>=1.10.0
+agents>=1.4.0
+
+# Typing extensions
+typing-extensions>=4.8.0
+
+# Optional optimization dependencies
+ujson>=5.8.0  # Fast JSON processing
+orjson>=3.9.10  # Even faster JSON processing
+pytest~=8.4.1
+pytest-asyncio>=1.1.0
