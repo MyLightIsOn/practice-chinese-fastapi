@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import List, Dict, Any
 from src.config import OPENAI_API_KEY
 from agents import Runner
-from src.agents.exercise_agents import exercise_generator, evaluator, formatter
+from src.agents import exercise_generator, evaluator, formatter
 
 router = APIRouter()
 
@@ -23,6 +23,8 @@ async def generate_exercise(request: WordsRequest):
     Returns:
         JSON-formatted exercise ready for frontend rendering
     """
+    print(f"Received request: {request.words}")
+
     try:
         # Step 1: Generate exercise with the Exercise Generator agent
         generator_result = await Runner.run(
@@ -57,8 +59,8 @@ async def generate_exercise(request: WordsRequest):
             f"Format this approved exercise for the frontend: {generator_result.final_output}"
         )
 
-        # Return the formatted exercise
-        return formatter_result.final_output
+        # Return the formatted exercise as a dictionary
+        return formatter_result.final_output.model_dump()
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating exercise: {str(e)}")
