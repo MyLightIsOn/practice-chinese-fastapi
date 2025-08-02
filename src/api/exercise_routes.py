@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Literal
+
 from src.config import OPENAI_API_KEY
 from agents import Runner
 from src.agents import exercise_generator, evaluator, formatter
@@ -8,12 +9,16 @@ from src.agents import exercise_generator, evaluator, formatter
 router = APIRouter()
 
 
-class WordsRequest(BaseModel):
-    words: List[str]
+class WordRequest(BaseModel):
+    word: str
+    exercise_type: Literal["fill in the blank", "multiple choice"]
+    type: Literal["traditional", "simplified"]
 
+class ExerciseRequest(BaseModel):
+    words: List[WordRequest]
 
 @router.post("/generate-exercise", response_model=Dict[str, Any])
-async def generate_exercise(request: WordsRequest):
+async def generate_exercise(request: ExerciseRequest):
     """
     Generate a language learning exercise based on selected vocabulary words.
 
@@ -26,10 +31,22 @@ async def generate_exercise(request: WordsRequest):
     print(f"Received request: {request.words}")
 
     try:
+        # Extract word information
+        words = [item.word for item in request.words]
+        exercise_types = list(set(item.exercise_type for item in request.words))
+        character_type = request.words[0].type  # We'll use the first item's type for consistency
+
+        # Create a structured prompt for the exercise generator
+        prompt = f"""
+                Create an exercise using these words: {', '.join(words)}
+                Exercise type(s): {', '.join(exercise_types)}
+                Character type: {character_type}
+                """
+
         # Step 1: Generate exercise with the Exercise Generator agent
         generator_result = await Runner.run(
             exercise_generator,
-            f"Create an exercise using these words: {', '.join(request.words)}"
+            prompt
         )
 
         # Step 2: Evaluate the exercise with the Evaluator agent

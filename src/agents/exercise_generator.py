@@ -13,8 +13,6 @@ def get_selected_words(words: List[str]) -> List[Dict[str, str]]:
     Returns:
         List of dictionaries containing details about each word
     """
-    # In a real implementation, this would query your dictionary database
-    # For now, we'll return a simple mock response
     return [{"simplified": word, "traditional": word, "pinyin": "pinyin", "definition": f"Definition of {word}"}
             for word in words]
 
@@ -30,11 +28,18 @@ exercise_generator = Agent(
     1. Fill in the blank: Create sentences with blanks where the vocabulary words should be used.
     2. Multiple choice: Create questions with 4 options where only one is correct.
 
+    Character types:
+    - Traditional: Use traditional Chinese characters in the exercise
+    - Simplified: Use simplified Chinese characters in the exercise
+
     Rules:
     - Use only the provided vocabulary words
+    - Create exercises of the type(s) specified in the request
+    - Use the character type (traditional or simplified) specified in the request
     - Create clear and concise exercises
     - Ensure the exercises test understanding of the words
     - Provide the correct answers
-    """,
+    """
+,
     tools=[get_selected_words],
 )

@@ -26,6 +26,15 @@ ExerciseOutput = Union[FillInBlankExercise, MultipleChoiceExercise]
 formatter = Agent(
     name="Exercise Formatter",
     instructions="""
+    You are an expert in formatting Chinese language exercises for display in a web application.
+    Your task is to take approved exercises and format them for frontend rendering.
+    
+    Pay attention to:
+    - Format the exercise according to its type (fill in the blank or multiple choice)
+    - Use the specified character type (traditional or simplified) in the formatted output
+    - Structure the data in a way that's easy for the frontend to render
+    - Include all necessary information (questions, options, correct answers)
+    
     You format exercises into a consistent JSON structure for the frontend to render.
 
     The JSON structure should include:
