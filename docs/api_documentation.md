@@ -355,6 +355,122 @@ Response:
 }
 ```
 
+## Exercise Generation
+
+```
+POST /generate-exercise
+```
+
+This endpoint generates language learning exercises based on selected vocabulary words. It supports different exercise types and character formats (traditional or simplified).
+
+### Request Format
+
+```json
+{
+  "words": [
+    {
+      "word": "你好",
+      "exercise_type": "fill in the blank",
+      "type": "simplified"
+    },
+    {
+      "word": "谢谢",
+      "exercise_type": "fill in the blank",
+      "type": "simplified"
+    }
+  ]
+}
+```
+
+#### Parameters
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| words | array | Yes | Array of word objects |
+| word.word | string | Yes | The Chinese word to include in the exercise |
+| word.exercise_type | string | Yes | Type of exercise: "fill in the blank" or "multiple choice" |
+| word.type | string | Yes | Character set to use: "traditional" or "simplified" |
+
+### Response Format
+
+```json
+{
+  "exercise_type": "fill_in_blank",
+  "questions": [
+    {
+      "text": "我想和你说_____。"
+    },
+    {
+      "text": "_____你帮助我。"
+    }
+  ],
+  "answers": [
+    "你好",
+    "谢谢"
+  ]
+}
+```
+
+For multiple choice exercises, the response will include options:
+
+```json
+{
+  "exercise_type": "multiple_choice",
+  "questions": [
+    {
+      "text": "How do you say 'hello' in Chinese?",
+      "options": ["你好", "再见", "谢谢", "对不起"]
+    },
+    {
+      "text": "Which word means 'thank you'?",
+      "options": ["早上好", "谢谢", "晚安", "你好"]
+    }
+  ],
+  "answers": [0, 1]
+}
+```
+
+### Example
+
+Request:
+```
+POST /generate-exercise
+Content-Type: application/json
+
+{
+  "words": [
+    {
+      "word": "你好",
+      "exercise_type": "multiple choice",
+      "type": "traditional"
+    },
+    {
+      "word": "謝謝",
+      "exercise_type": "multiple choice",
+      "type": "traditional"
+    }
+  ]
+}
+```
+
+Response:
+```json
+{
+  "exercise_type": "multiple_choice",
+  "questions": [
+    {
+      "text": "Which phrase would you use when meeting someone for the first time?",
+      "options": ["你好", "再見", "晚安", "謝謝"]
+    },
+    {
+      "text": "After someone helps you, what should you say?",
+      "options": ["對不起", "你好", "謝謝", "不客氣"]
+    }
+  ],
+  "answers": [0, 2]
+}
+```
+
 ## Error Handling
 
 ### Invalid Parameters
