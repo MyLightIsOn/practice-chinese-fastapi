@@ -10,23 +10,12 @@ def _init_client() -> Client:
     if _supabase_client is not None:
         return _supabase_client
 
-    # Support multiple env var names for convenience/migration
     url = (
-        os.getenv("SUPABASE_URL")
-        or os.getenv("SUPABASE_DB_URL")
-        or os.getenv("SUPABASE_DB")
-        or os.getenv("SUPABASE_DB_ENDPOINT")
-        or os.getenv("SUPABASE_PROJECT_URL")
-        or os.getenv("SUPABASE_DB_URL")
-        or os.getenv("SUPABASE_DB_URI")
-        or os.getenv("SUPABASE_URI")
+        os.getenv("SUPABASE_DB_URL")
     )
     key = (
         os.getenv("SUPABASE_ANON_KEY")
-        or os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-        or os.getenv("SUPABASE_KEY")
-        or os.getenv("SUPABASE_DB_KEY")
-        or os.getenv("SUPBABASE_DB_KEY")  # keep for legacy typo in .env
+
     )
 
     if not url or not key:
