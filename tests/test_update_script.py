@@ -17,7 +17,7 @@ def test_update_with_sample():
     
     # Connect to the database
     print("Connecting to database...")
-    conn = sqlite3.connect('../cedict.db')
+    conn = sqlite3.connect('../archive/cedict.db')
     cursor = conn.cursor()
     
     # Enable foreign keys

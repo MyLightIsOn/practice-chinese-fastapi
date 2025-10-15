@@ -1,77 +1,118 @@
-import sqlite3
-from typing import List, Dict, Any, Tuple
+import os
+from typing import List, Dict, Any
+from supabase import create_client, Client
 
-# Create a database connection
-conn = sqlite3.connect("cedict.db", check_same_thread=False)
+_supabase_client: Client | None = None
 
-def get_connection():
-    """Get the database connection."""
-    return conn
 
-def format_results(results: List[Tuple]) -> List[Dict[str, Any]]:
-    """Format the database results into a list of dictionaries with additional related data."""
-    formatted_results = []
-    cursor = conn.cursor()
+def _init_client() -> Client:
+    global _supabase_client
+    if _supabase_client is not None:
+        return _supabase_client
 
-    for row in results:
-        entry_id = row[0]
+    # Support multiple env var names for convenience/migration
+    url = (
+        os.getenv("SUPABASE_URL")
+        or os.getenv("SUPABASE_DB_URL")
+        or os.getenv("SUPABASE_DB")
+        or os.getenv("SUPABASE_DB_ENDPOINT")
+        or os.getenv("SUPABASE_PROJECT_URL")
+        or os.getenv("SUPABASE_DB_URL")
+        or os.getenv("SUPABASE_DB_URI")
+        or os.getenv("SUPABASE_URI")
+    )
+    key = (
+        os.getenv("SUPABASE_ANON_KEY")
+        or os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+        or os.getenv("SUPABASE_KEY")
+        or os.getenv("SUPABASE_DB_KEY")
+        or os.getenv("SUPBABASE_DB_KEY")  # keep for legacy typo in .env
+    )
 
-        # Get parts of speech
-        cursor.execute(
-            "SELECT pos FROM part_of_speech WHERE entry_id = ?",
-            (entry_id,)
+    if not url or not key:
+        raise RuntimeError(
+            "Supabase credentials are missing. Please set SUPABASE_URL and SUPABASE_ANON_KEY (or service role)."
         )
-        parts_of_speech = [pos[0] for pos in cursor.fetchall()]
 
-        # Get classifiers
-        cursor.execute(
-            "SELECT classifier FROM classifier WHERE entry_id = ?",
-            (entry_id,)
-        )
-        classifiers = [cls[0] for cls in cursor.fetchall()]
+    _supabase_client = create_client(url, key)
+    return _supabase_client
 
-        # Get transcriptions
-        cursor.execute(
-            "SELECT system, value FROM transcription WHERE entry_id = ?",
-            (entry_id,)
-        )
-        transcriptions_rows = cursor.fetchall()
-        transcriptions = {}
-        for system, value in transcriptions_rows:
-            transcriptions[system] = value
 
-        # Get meanings
-        cursor.execute(
-            "SELECT definition FROM meaning WHERE entry_id = ?",
-            (entry_id,)
-        )
-        meanings = [meaning[0] for meaning in cursor.fetchall()]
+def get_connection() -> Client:
+    """Get the Supabase client (kept name for backward-compatibility)."""
+    return _init_client()
 
-        # Format HSK levels
+
+def _fetch_related_data(client: Client, entry_ids: List[int]) -> Dict[str, Dict[int, Any]]:
+    """Batch-fetch related tables and group by entry_id for formatting."""
+    if not entry_ids:
+        return {"pos": {}, "cls": {}, "trans": {}, "mean": {}}
+
+    # Fetch parts of speech
+    pos_resp = client.table("part_of_speech").select("entry_id,pos").in_("entry_id", entry_ids).execute()
+    pos_by_entry: Dict[int, List[str]] = {}
+    for row in pos_resp.data or []:
+        pos_by_entry.setdefault(row["entry_id"], []).append(row["pos"])
+
+    # Fetch classifiers
+    cls_resp = client.table("classifier").select("entry_id,classifier").in_("entry_id", entry_ids).execute()
+    cls_by_entry: Dict[int, List[str]] = {}
+    for row in cls_resp.data or []:
+        cls_by_entry.setdefault(row["entry_id"], []).append(row["classifier"])
+
+    # Fetch transcriptions
+    trans_resp = client.table("transcription").select("entry_id,system,value").in_("entry_id", entry_ids).execute()
+    trans_by_entry: Dict[int, Dict[str, str]] = {}
+    for row in trans_resp.data or []:
+        d = trans_by_entry.setdefault(row["entry_id"], {})
+        d[row["system"]] = row["value"]
+
+    # Fetch meanings
+    mean_resp = client.table("meaning").select("entry_id,definition").in_("entry_id", entry_ids).execute()
+    mean_by_entry: Dict[int, List[str]] = {}
+    for row in mean_resp.data or []:
+        mean_by_entry.setdefault(row["entry_id"], []).append(row["definition"])
+
+    return {
+        "pos": pos_by_entry,
+        "cls": cls_by_entry,
+        "trans": trans_by_entry,
+        "mean": mean_by_entry,
+    }
+
+
+def format_results(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Format Supabase dictionaryentry rows with related data into API shape."""
+    client = _init_client()
+
+    # rows are dicts from Supabase select; gather ids
+    entry_ids = [row["id"] for row in rows] if rows else []
+    related = _fetch_related_data(client, entry_ids)
+
+    formatted_results: List[Dict[str, Any]] = []
+    for row in rows:
+        entry_id = row["id"]
         hsk_data = {
-            "combined": row[5],  # Keep the original hsk_level for backward compatibility
-            "old": row[8],  # old_hsk_level
-            "new": row[9]  # new_hsk_level
+            "combined": row.get("hsk_level"),
+            "old": row.get("old_hsk_level"),
+            "new": row.get("new_hsk_level"),
         }
-
-        # Create the formatted result
         formatted_result = {
             "id": entry_id,
-            "simplified": row[1],
-            "traditional": row[2],
-            "pinyin": row[3],
-            "definition": row[4],  # Keep the original definition for backward compatibility
+            "simplified": row.get("simplified"),
+            "traditional": row.get("traditional"),
+            "pinyin": row.get("pinyin"),
+            "definition": row.get("english_definitions"),
             "hsk_level": hsk_data,
-            "frequency_rank": row[6],
-            "radical": row[7],
-            "match_type": row[10],
-            "relevance_score": row[11],
-            "parts_of_speech": parts_of_speech,
-            "classifiers": classifiers,
-            "transcriptions": transcriptions,
-            "meanings": meanings if meanings else [row[4]]  # Use original definition if no separate meanings
+            "frequency_rank": row.get("frequency_rank"),
+            "radical": row.get("radical"),
+            "match_type": row.get("match_type"),
+            "relevance_score": row.get("relevance_score"),
+            "parts_of_speech": related["pos"].get(entry_id, []),
+            "classifiers": related["cls"].get(entry_id, []),
+            "transcriptions": related["trans"].get(entry_id, {}),
+            "meanings": related["mean"].get(entry_id, []) or [row.get("english_definitions")],
         }
-
         formatted_results.append(formatted_result)
 
     return formatted_results

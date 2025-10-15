@@ -3,7 +3,7 @@ import time
 
 def test_query(query, params, description):
     """Execute a query and measure its execution time."""
-    conn = sqlite3.connect("../cedict.db")
+    conn = sqlite3.connect("../archive/cedict.db")
     cursor = conn.cursor()
     
     start_time = time.time()

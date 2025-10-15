@@ -3,7 +3,7 @@ import json
 from src.search.search import search_english
 
 # Connect to the database
-conn = sqlite3.connect('../cedict.db')
+conn = sqlite3.connect('../archive/cedict.db')
 conn.row_factory = sqlite3.Row
 cursor = conn.cursor()
 

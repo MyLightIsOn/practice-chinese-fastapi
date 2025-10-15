@@ -19,5 +19,9 @@ typing-extensions>=4.8.0
 # Optional optimization dependencies
 ujson>=5.8.0  # Fast JSON processing
 orjson>=3.9.10  # Even faster JSON processing
+
+# Supabase client
+supabase>=2.6.0
+
 pytest~=8.4.1
 pytest-asyncio>=1.1.0

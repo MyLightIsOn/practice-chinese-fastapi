@@ -3,75 +3,49 @@ from typing import List, Dict, Any
 from src.detection.input_detection import remove_tone_numbers, pinyin_list
 from src.db.connection import format_results
 from src.utils.pinyin_phrases import common_phrases_with_tones
+from supabase import Client
 
-def search_chinese(text: str, cursor, limit: int = 20, offset: int = 0) -> List[Dict[str, Any]]:
+def search_chinese(text: str, client: Client, limit: int = 20, offset: int = 0) -> List[Dict[str, Any]]:
     """
     Search for Chinese characters with priority:
     1. Exact matches in simplified/traditional
     2. Partial matches if no exact matches found
     """
-    # First try exact matches
-    query = """
-            SELECT d.id, \
-                   d.simplified, \
-                   d.traditional, \
-                   d.pinyin, \
-                   d.english_definitions,
-                   d.hsk_level, \
-                   d.frequency_rank, \
-                   d.radical, \
-                   d.old_hsk_level, \
-                   d.new_hsk_level,
-                   'exact' as match_type,
-                   1       as relevance_score
-            FROM dictionaryentry d
-            WHERE d.simplified = ? \
-               OR d.traditional = ?
-            ORDER BY CASE \
-                         WHEN d.hsk_level IS NULL THEN 999 \
-                         ELSE d.hsk_level \
-                         END ASC, \
-                     CASE \
-                         WHEN d.frequency_rank IS NULL THEN 999999 \
-                         ELSE d.frequency_rank \
-                         END ASC LIMIT ? \
-            OFFSET ? \
-            """
-    cursor.execute(query, (text, text, limit, offset))
-    results = cursor.fetchall()
+    start = offset
+    end = offset + limit - 1
 
-    # If no exact matches, try partial matches
-    if not results:
-        query = """
-                SELECT d.id, \
-                       d.simplified, \
-                       d.traditional, \
-                       d.pinyin, \
-                       d.english_definitions,
-                       d.hsk_level, \
-                       d.frequency_rank, \
-                       d.radical, \
-                       d.old_hsk_level, \
-                       d.new_hsk_level,
-                       'partial' as match_type,
-                       0.5       as relevance_score
-                FROM dictionaryentry d
-                WHERE d.simplified LIKE ? \
-                   OR d.traditional LIKE ?
-                ORDER BY CASE \
-                             WHEN d.hsk_level IS NULL THEN 999 \
-                             ELSE d.hsk_level \
-                             END ASC, \
-                         CASE \
-                             WHEN d.frequency_rank IS NULL THEN 999999 \
-                             ELSE d.frequency_rank \
-                             END ASC LIMIT ? \
-                OFFSET ? \
-                """
-        cursor.execute(query, (f"%{text}%", f"%{text}%", limit, offset))
-        results = cursor.fetchall()
+    # First: exact matches
+    exact = (
+        client.table("dictionaryentry")
+        .select("id,simplified,traditional,pinyin,english_definitions,hsk_level,frequency_rank,radical,old_hsk_level,new_hsk_level")
+        .or_(f"simplified.eq.{text},traditional.eq.{text}")
+        .order("hsk_level", nullsfirst=False)
+        .order("frequency_rank", nullsfirst=False)
+        .range(start, end)
+        .execute()
+    )
+    rows = exact.data or []
+    for r in rows:
+        r["match_type"] = "exact"
+        r["relevance_score"] = 1
 
-    return format_results(results)
+    # If no exact, try partial
+    if not rows:
+        partial = (
+            client.table("dictionaryentry")
+            .select("id,simplified,traditional,pinyin,english_definitions,hsk_level,frequency_rank,radical,old_hsk_level,new_hsk_level")
+            .or_(f"simplified.ilike.%{text}%,traditional.ilike.%{text}%")
+            .order("hsk_level", nullsfirst=False)
+            .order("frequency_rank", nullsfirst=False)
+            .range(start, end)
+            .execute()
+        )
+        rows = partial.data or []
+        for r in rows:
+            r["match_type"] = "partial"
+            r["relevance_score"] = 0.5
+
+    return format_results(rows)
 
 
 def preprocess_pinyin(text: str) -> List[str]:
@@ -122,274 +96,137 @@ def preprocess_pinyin(text: str) -> List[str]:
     return list(dict.fromkeys(variants))
 
 
-def search_pinyin(text: str, cursor, limit: int = 20, offset: int = 0) -> List[Dict[str, Any]]:
+def search_pinyin(text: str, client: Client, limit: int = 20, offset: int = 0) -> List[Dict[str, Any]]:
 
     # Preprocess the pinyin input to handle different formats
     pinyin_variants = preprocess_pinyin(text)
 
-    # Try each variant in order
-    for variant in pinyin_variants:
-        # First try exact pinyin match (with tones)
-        query = """
-                SELECT d.id, \
-                       d.simplified, \
-                       d.traditional, \
-                       d.pinyin, \
-                       d.english_definitions,
-                       d.hsk_level, \
-                       d.frequency_rank, \
-                       d.radical, \
-                       d.old_hsk_level, \
-                       d.new_hsk_level,
-                       'exact_tone' as match_type,
-                       1            as relevance_score
-                FROM dictionaryentry d
-                WHERE d.pinyin = ?
-                ORDER BY CASE \
-                             WHEN d.hsk_level IS NULL THEN 999 \
-                             ELSE d.hsk_level \
-                             END ASC, \
-                         CASE \
-                             WHEN d.frequency_rank IS NULL THEN 999999 \
-                             ELSE d.frequency_rank \
-                             END ASC LIMIT ? \
-                OFFSET ? \
-                """
-        cursor.execute(query, (variant, limit, offset))
-        results = cursor.fetchall()
+    start = offset
+    end = offset + limit - 1
 
-        if results:
-            return format_results(results)
-
-    # If no exact matches with any variant, try tone-insensitive match
+    # Try each variant in order - exact tone first
     for variant in pinyin_variants:
-        # Remove tone numbers from the search text
+        exact = (
+            client.table("dictionaryentry")
+            .select("id,simplified,traditional,pinyin,english_definitions,hsk_level,frequency_rank,radical,old_hsk_level,new_hsk_level")
+            .eq("pinyin", variant)
+            .order("hsk_level", nullsfirst=False)
+            .order("frequency_rank", nullsfirst=False)
+            .range(start, end)
+            .execute()
+        )
+        rows = exact.data or []
+        if rows:
+            for r in rows:
+                r["match_type"] = "exact_tone"
+                r["relevance_score"] = 1
+            return format_results(rows)
+
+    # Tone-insensitive (prefix) match
+    for variant in pinyin_variants:
         tone_insensitive_text = remove_tone_numbers(variant)
+        prefix = (
+            client.table("dictionaryentry")
+            .select("id,simplified,traditional,pinyin,english_definitions,hsk_level,frequency_rank,radical,old_hsk_level,new_hsk_level")
+            .ilike("pinyin", f"{tone_insensitive_text}%")
+            .order("hsk_level", nullsfirst=False)
+            .order("frequency_rank", nullsfirst=False)
+            .range(start, end)
+            .execute()
+        )
+        rows = prefix.data or []
+        if rows:
+            for r in rows:
+                r["match_type"] = "tone_insensitive"
+                r["relevance_score"] = 0.8
+            return format_results(rows)
 
-        query = """
-                SELECT d.id, \
-                       d.simplified, \
-                       d.traditional, \
-                       d.pinyin, \
-                       d.english_definitions,
-                       d.hsk_level, \
-                       d.frequency_rank, \
-                       d.radical, \
-                       d.old_hsk_level, \
-                       d.new_hsk_level,
-                       'tone_insensitive' as match_type,
-                       0.8                as relevance_score
-                FROM dictionaryentry d
-                WHERE d.pinyin LIKE ? || '%'
-                ORDER BY CASE \
-                             WHEN d.hsk_level IS NULL THEN 999 \
-                             ELSE d.hsk_level \
-                             END ASC, \
-                         CASE \
-                             WHEN d.frequency_rank IS NULL THEN 999999 \
-                             ELSE d.frequency_rank \
-                             END ASC LIMIT ? \
-                OFFSET ? \
-                """
-        cursor.execute(query, (tone_insensitive_text, limit, offset))
-        results = cursor.fetchall()
+    # Partial match anywhere
+    partial = (
+        client.table("dictionaryentry")
+        .select("id,simplified,traditional,pinyin,english_definitions,hsk_level,frequency_rank,radical,old_hsk_level,new_hsk_level")
+        .ilike("pinyin", f"%{text}%")
+        .order("hsk_level", nullsfirst=False)
+        .order("frequency_rank", nullsfirst=False)
+        .range(start, end)
+        .execute()
+    )
+    rows = partial.data or []
+    for r in rows:
+        r["match_type"] = "partial"
+        r["relevance_score"] = 0.5
 
-        if results:
-            return format_results(results)
-
-    # If still no matches, try partial pinyin match
-    query = """
-            SELECT d.id, \
-                   d.simplified, \
-                   d.traditional, \
-                   d.pinyin, \
-                   d.english_definitions,
-                   d.hsk_level, \
-                   d.frequency_rank, \
-                   d.radical, \
-                   d.old_hsk_level, \
-                   d.new_hsk_level,
-                   'partial' as match_type,
-                   0.5       as relevance_score
-            FROM dictionaryentry d
-            WHERE d.pinyin LIKE ?
-            ORDER BY CASE \
-                         WHEN d.hsk_level IS NULL THEN 999 \
-                         ELSE d.hsk_level \
-                         END ASC, \
-                     CASE \
-                         WHEN d.frequency_rank IS NULL THEN 999999 \
-                         ELSE d.frequency_rank \
-                         END ASC LIMIT ? \
-            OFFSET ? \
-            """
-    cursor.execute(query, (f"%{text}%", limit, offset))
-    results = cursor.fetchall()
-
-    return format_results(results)
+    return format_results(rows)
 
 
-def search_english(text: str, cursor, limit: int = 20, offset: int = 0) -> List[Dict[str, Any]]:
+def search_english(text: str, client: Client, limit: int = 20, offset: int = 0) -> List[Dict[str, Any]]:
     """
-    Search for English text using FTS and rank by:
-    1. Direct translation match (for single words)
-    2. FTS match quality score
-    3. HSK level
-    4. Frequency ranking
+    Search for English text using LIKE-based ranking (portable across Supabase/Postgres without FTS schema).
+    Priority:
+    1) Direct translation style startswith matches for single words
+    2) Exact-ish contains with spaces around word
+    3) Partial contains
+    Results are de-duplicated and paginated after combining.
     """
-    # Preprocess the English text
-    # For multi-word queries, use the original text
-    # For single-word queries, try both the original and with wildcards
     words = text.split()
     is_single_word = len(words) == 1
 
-    if not is_single_word:
-        # Multi-word query - use as is for better phrase matching
-        fts_query = text
-    else:
-        # Single word query - use wildcards for better matching
-        fts_query = f"{text}*"
+    all_rows: List[Dict[str, Any]] = []
 
-    all_results = []
-    
-    # For single word queries, prioritize direct translations
+    base_select = "id,simplified,traditional,pinyin,english_definitions,hsk_level,frequency_rank,radical,old_hsk_level,new_hsk_level"
+
     if is_single_word:
-        # First, try to find direct translations where the word appears at the beginning of the definition
-        # This will prioritize entries like "car; automobile; bus" for the query "car"
-        # Also match entries that start with the search term followed by a space, like "cat (CL:隻|只[zhi1])"
-        query = """
-                SELECT d.id, \
-                       d.simplified, \
-                       d.traditional, \
-                       d.pinyin, \
-                       d.english_definitions,
-                       d.hsk_level, \
-                       d.frequency_rank, \
-                       d.radical, \
-                       d.old_hsk_level, \
-                       d.new_hsk_level,
-                       'direct_translation' as match_type,
-                       2.0                  as relevance_score
-                FROM dictionaryentry d
-                WHERE d.english_definitions LIKE ? OR d.english_definitions LIKE ? OR d.english_definitions LIKE ?
-                ORDER BY CASE \
-                             WHEN d.hsk_level IS NULL THEN 999 \
-                             ELSE d.hsk_level \
-                             END ASC, \
-                         CASE \
-                             WHEN d.frequency_rank IS NULL THEN 999999 \
-                             ELSE d.frequency_rank \
-                             END ASC
-                """
-        cursor.execute(query, (f"{text};%", f"{text},%", f"{text} %"))
-        direct_results = cursor.fetchall()
-        
-        if direct_results:
-            all_results.extend(direct_results)
+        # Direct translation style: startswith the term (broader but safe for PostgREST or_ constraints)
+        direct_resp = (
+            client.table("dictionaryentry")
+            .select(base_select)
+            .ilike("english_definitions", f"{text}%")
+            .order("hsk_level", nullsfirst=False)
+            .order("frequency_rank", nullsfirst=False)
+            .execute()
+        )
+        for r in direct_resp.data or []:
+            r["match_type"] = "direct_translation"
+            r["relevance_score"] = 2.0
+        all_rows.extend(direct_resp.data or [])
 
-    # Try exact match next
-    query = """
-            SELECT d.id, \
-                   d.simplified, \
-                   d.traditional, \
-                   d.pinyin, \
-                   d.english_definitions,
-                   d.hsk_level, \
-                   d.frequency_rank, \
-                   d.radical, \
-                   d.old_hsk_level, \
-                   d.new_hsk_level,
-                   'fts_exact' as match_type,
-                   1           as relevance_score
-            FROM dictionaryentry d
-            WHERE d.english_definitions LIKE ?
-            ORDER BY CASE \
-                         WHEN d.hsk_level IS NULL THEN 999 \
-                         ELSE d.hsk_level \
-                         END ASC, \
-                     CASE \
-                         WHEN d.frequency_rank IS NULL THEN 999999 \
-                         ELSE d.frequency_rank \
-                         END ASC
-            """
-    cursor.execute(query, (f"% {text} %",))
-    exact_results = cursor.fetchall()
-    if exact_results:
-        all_results.extend(exact_results)
+    # Exact-ish contains (word boundary approximation using spaces)
+    exactish_resp = (
+        client.table("dictionaryentry")
+        .select(base_select)
+        .ilike("english_definitions", f"% {text} %")
+        .order("hsk_level", nullsfirst=False)
+        .order("frequency_rank", nullsfirst=False)
+        .execute()
+    )
+    for r in exactish_resp.data or []:
+        r["match_type"] = "fts_exact"
+        r["relevance_score"] = 1.0
+    all_rows.extend(exactish_resp.data or [])
 
-    # Try FTS
-    query = """
-            SELECT d.id, \
-                   d.simplified, \
-                   d.traditional, \
-                   d.pinyin, \
-                   d.english_definitions,
-                   d.hsk_level, \
-                   d.frequency_rank, \
-                   d.radical, \
-                   d.old_hsk_level, \
-                   d.new_hsk_level,
-                   'fts' as match_type,
-                   0.9   as relevance_score
-            FROM dictionaryentry d
-                     JOIN (SELECT id, rank \
-                           FROM fts_english_definitions \
-                           WHERE content MATCH ? \
-                           ORDER BY rank) as fts ON d.id = fts.id
-            ORDER BY fts.rank, \
-                     CASE \
-                         WHEN d.hsk_level IS NULL THEN 999 \
-                         ELSE d.hsk_level \
-                         END ASC, \
-                     CASE \
-                         WHEN d.frequency_rank IS NULL THEN 999999 \
-                         ELSE d.frequency_rank \
-                         END ASC
-            """
-    cursor.execute(query, (fts_query,))
-    fts_results = cursor.fetchall()
-    if fts_results:
-        all_results.extend(fts_results)
+    # Partial contains
+    partial_resp = (
+        client.table("dictionaryentry")
+        .select(base_select)
+        .ilike("english_definitions", f"%{text}%")
+        .order("hsk_level", nullsfirst=False)
+        .order("frequency_rank", nullsfirst=False)
+        .execute()
+    )
+    for r in partial_resp.data or []:
+        r["match_type"] = "partial"
+        r["relevance_score"] = 0.5
+    all_rows.extend(partial_resp.data or [])
 
-    # Try a more relaxed LIKE search
-    query = """
-            SELECT d.id, \
-                   d.simplified, \
-                   d.traditional, \
-                   d.pinyin, \
-                   d.english_definitions,
-                   d.hsk_level, \
-                   d.frequency_rank, \
-                   d.radical, \
-                   d.old_hsk_level, \
-                   d.new_hsk_level,
-                   'partial' as match_type,
-                   0.5       as relevance_score
-            FROM dictionaryentry d
-            WHERE d.english_definitions LIKE ?
-            ORDER BY CASE \
-                         WHEN d.hsk_level IS NULL THEN 999 \
-                         ELSE d.hsk_level \
-                         END ASC, \
-                     CASE \
-                         WHEN d.frequency_rank IS NULL THEN 999999 \
-                         ELSE d.frequency_rank \
-                         END ASC
-            """
-    cursor.execute(query, (f"%{text}%",))
-    partial_results = cursor.fetchall()
-    if partial_results:
-        all_results.extend(partial_results)
+    # De-duplicate by id preserving order
+    seen = set()
+    unique_rows: List[Dict[str, Any]] = []
+    for r in all_rows:
+        rid = r.get("id")
+        if rid not in seen:
+            seen.add(rid)
+            unique_rows.append(r)
 
-    # Remove duplicates based on entry ID
-    seen_ids = set()
-    unique_results = []
-    for result in all_results:
-        if result[0] not in seen_ids:  # Check if ID is already seen
-            seen_ids.add(result[0])
-            unique_results.append(result)
-
-    # Apply pagination to the combined results
-    paginated_results = unique_results[offset:offset + limit]
-
-    return format_results(paginated_results)
+    # Pagination after combining
+    paginated = unique_rows[offset: offset + limit]
+    return format_results(paginated)
